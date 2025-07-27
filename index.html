@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>링크스테이션 수익 시뮬레이션 v2.2</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        label { display: block; margin: 10px 0 5px; }
+        input { padding: 5px; width: 200px; }
+        button { margin-top: 15px; padding: 8px 12px; }
+        table { border-collapse: collapse; margin-top: 20px; width: 100%; max-width: 600px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+        th { background-color: #f7f7f7; text-align: center; }
+        td:first-child { text-align: left; }
+        #interactive-sim { border:1px solid #ccc; padding:16px; margin-bottom:20px; max-width:600px; background:#fafbff; }
+        #interactive-sim label { margin-top:0; }
+    </style>
+</head>
+<body>
+<h1>링크스테이션 수익 시뮬레이션 v2.2</h1>
+
+<!-- 대화형 시뮬레이션 영역 -->
+<div id="interactive-sim">
+  <div id="step1">
+    <label>자사몰에 하루 몇명의 유저가 가입 하세요?</label>
+    <input type="number" id="step1Input" min="1" value="50">
+    <button onclick="nextStep(1)">다음</button>
+  </div>
+  <div id="step2" style="display:none;">
+    <label>하위몰의 구매전환율은 몇 % 로 예측하세요?</label>
+    <input type="number" id="step2Input" min="0" max="100" step="0.1" value="25">
+    <button onclick="nextStep(2)">다음</button>
+  </div>
+  <div id="step3" style="display:none;">
+    <label>평균 주문액은 어느정도 일까요?</label>
+    <input type="number" id="step3Input" min="1" value="150000">
+    <button onclick="nextStep(3)">입력 완료</button>
+  </div>
+  <div id="completeMsg" style="display:none; color:green; margin-top:10px;">
+    입력이 완료되었습니다! 아래 시뮬레이션 입력값이 자동으로 채워졌습니다.
+  </div>
+</div>
+
+<label for="numMalls">하위몰 수:</label>
+<input type="number" id="numMalls" value="1000" min="1">
+
+<label for="conversionRate">하위몰당 구매전환율 (%):</label>
+<input type="number" id="conversionRate" value="25" min="0" step="0.1">
+
+<label for="orderValue">평균 주문액 (KRW):</label>
+<input type="number" id="orderValue" value="150000" min="1">
+
+<button onclick="simulate()">시뮬레이션 실행</button>
+
+<table id="resultTable" style="display:none">
+    <thead>
+        <tr>
+            <th>포지션</th>
+            <th>저작료율 (%)</th>
+            <th>수익 (KRW)</th>
+            <th>30일 수익 (KRW)</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<!-- 요약 결과 -->
+<div id="summary" style="display:none; margin-top:15px;">
+    <p><strong>총 매출(GMV):</strong> <span id="totalGmv"></span> KRW / <strong>30일 매출(GMV):</strong> <span id="totalGmv30"></span> KRW</p>
+    <p><strong>총 수수료 수익(8.1%):</strong> <span id="totalRevenue"></span> KRW / <strong>30일 총 수수료 수익:</strong> <span id="totalRevenue30"></span> KRW</p>
+</div>
+
+<script>
+function nextStep(step) {
+    if (step === 1) {
+        const val = document.getElementById('step1Input').value;
+        if (!val || parseInt(val) <= 0) { alert('유저 수를 입력하세요.'); return; }
+        document.getElementById('numMalls').value = val;
+        document.getElementById('step1').style.display = 'none';
+        document.getElementById('step2').style.display = '';
+        document.getElementById('step2Input').focus();
+    } else if (step === 2) {
+        const val = document.getElementById('step2Input').value;
+        if (val === '' || parseFloat(val) < 0) { alert('구매전환율을 입력하세요.'); return; }
+        document.getElementById('conversionRate').value = val;
+        document.getElementById('step2').style.display = 'none';
+        document.getElementById('step3').style.display = '';
+        document.getElementById('step3Input').focus();
+    } else if (step === 3) {
+        const val = document.getElementById('step3Input').value;
+        if (!val || parseFloat(val) <= 0) { alert('평균 주문액을 입력하세요.'); return; }
+        document.getElementById('orderValue').value = val;
+        document.getElementById('step3').style.display = 'none';
+        document.getElementById('completeMsg').style.display = '';
+        simulate(); // 모든 답변 입력 후 즉시 시뮬레이션 실행
+    }
+}
+
+function simulate() {
+    const numMalls = parseInt(document.getElementById('numMalls').value);
+    const conversionRateInput = parseFloat(document.getElementById('conversionRate').value);
+    const orderValue = parseFloat(document.getElementById('orderValue').value);
+
+    if (isNaN(numMalls) || isNaN(conversionRateInput) || isNaN(orderValue) || numMalls <= 0 || conversionRateInput < 0 || orderValue <= 0) {
+        alert('모든 값은 올바르게 입력되어야 합니다.');
+        return;
+    }
+
+    // convert percentage to decimal
+    const conversionRate = conversionRateInput / 100.0;
+
+    // self purchase assumption: each sub-mall represents one potential buyer
+    const transactionsPerMall = conversionRate;
+    const gmvPerMall = transactionsPerMall * orderValue;
+    const totalGmv = gmvPerMall * numMalls;
+
+    // total revenue (20% of GMV)
+    const totalRevenue = totalGmv * 0.20;
+
+    // revenue distribution percentages
+    // Internal costs (빌드업 연동 수수료, 배송비·운영비 지원) are hidden from display
+    const distribution = {
+        '그룹 IP': 0.024,
+        '셀러 IP': 0.021,
+        '링크 초대': 0.024,
+        '공급사 저작료': 0.012
+    };
+
+
+    const tbody = document.querySelector('#resultTable tbody');
+    tbody.innerHTML = '';
+
+    for (const role in distribution) {
+        const revenue = totalGmv * distribution[role];
+        const row = document.createElement('tr');
+        const cellRole = document.createElement('td');
+        cellRole.textContent = role;
+        const cellRate = document.createElement('td');
+        cellRate.textContent = (distribution[role] * 100).toFixed(2) + '%';
+        const cellRev = document.createElement('td');
+        cellRev.textContent = Math.round(revenue).toLocaleString();
+        const cellRev30 = document.createElement('td');
+        cellRev30.textContent = Math.round(revenue * 30).toLocaleString();
+        row.appendChild(cellRole);
+        row.appendChild(cellRate);
+        row.appendChild(cellRev);
+        row.appendChild(cellRev30);
+        tbody.appendChild(row);
+    }
+
+    document.getElementById('resultTable').style.display = '';
+
+    // fill summary values
+    document.getElementById('totalGmv').textContent = Math.round(totalGmv).toLocaleString();
+    document.getElementById('totalGmv30').textContent = Math.round(totalGmv * 30).toLocaleString();
+    document.getElementById('totalRevenue').textContent = Math.round(totalRevenue).toLocaleString();
+    document.getElementById('totalRevenue30').textContent = Math.round(totalRevenue * 30).toLocaleString();
+    document.getElementById('summary').style.display = '';
+}
+</script>
+</body>
+</html>
