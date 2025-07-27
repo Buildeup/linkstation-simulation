@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>링크스테이션 수익 시뮬레이션</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        label { display: block; margin: 10px 0 5px; }
+        input { padding: 5px; width: 200px; }
+        button { margin-top: 15px; padding: 8px 12px; }
+        table { border-collapse: collapse; margin-top: 20px; width: 100%; max-width: 600px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+        th { background-color: #f7f7f7; text-align: center; }
+        td:first-child { text-align: left; }
+    </style>
+</head>
+<body>
+<h1>링크스테이션 수익 시뮬레이션</h1>
+<p>자가 구매만 이루어지는 상황을 고려하여, <strong>하위몰 수</strong>와 <strong>하위몰당 구매전환율(%)</strong>을 입력하면 매출과 각 포지션별 예상 수익을 계산합니다. 구매전환율은 퍼센트(%) 단위로 입력하세요. 일반적인 전자상거래 평균 전환율은 약 1.5%~2.5% 정도입니다.</p>
+
+<label for="numMalls">하위몰 수:</label>
+<input type="number" id="numMalls" value="10" min="1">
+
+<label for="conversionRate">하위몰당 구매전환율 (%):</label>
+<input type="number" id="conversionRate" value="2.5" min="0" step="0.1">
+
+<label for="orderValue">평균 주문액 (KRW):</label>
+<input type="number" id="orderValue" value="50000" min="1">
+
+<button onclick="simulate()">시뮬레이션 실행</button>
+
+<table id="resultTable" style="display:none">
+    <thead>
+        <tr>
+            <th>포지션</th>
+            <th>수익 (KRW)</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<!-- 요약 결과 -->
+<div id="summary" style="display:none; margin-top:15px;">
+    <p><strong>총 매출(GMV):</strong> <span id="totalGmv"></span> KRW</p>
+    <p><strong>총 수수료 수익(20%):</strong> <span id="totalRevenue"></span> KRW</p>
+    <p><strong>배송비·운영비 지원(3.333%):</strong> <span id="surplus"></span> KRW</p>
+</div>
+
+<script>
+function simulate() {
+    const numMalls = parseInt(document.getElementById('numMalls').value);
+    const conversionRateInput = parseFloat(document.getElementById('conversionRate').value);
+    const orderValue = parseFloat(document.getElementById('orderValue').value);
+
+    if (isNaN(numMalls) || isNaN(conversionRateInput) || isNaN(orderValue) || numMalls <= 0 || conversionRateInput < 0 || orderValue <= 0) {
+        alert('모든 값은 올바르게 입력되어야 합니다.');
+        return;
+    }
+
+    // convert percentage to decimal
+    const conversionRate = conversionRateInput / 100.0;
+
+    // self purchase assumption: each sub-mall represents one potential buyer
+    const transactionsPerMall = conversionRate;
+    const gmvPerMall = transactionsPerMall * orderValue;
+    const totalGmv = gmvPerMall * numMalls;
+
+    // total revenue (20% of GMV)
+    const totalRevenue = totalGmv * 0.20;
+    const surplus = totalGmv * 0.03333;
+
+    // revenue distribution percentages (shipping/operating support replaces leftover)
+    const distribution = {
+        'PG (Toss payments)': 0.034,
+        '빌드업 연동 수수료': 0.05167,
+        '그룹 IP 소유': 0.024,
+        '셀러': 0.021,
+        '링크 초대': 0.024,
+        '공급사 저작료': 0.012,
+        '배송비·운영비 지원': 0.03333
+    };
+
+    const tbody = document.querySelector('#resultTable tbody');
+    tbody.innerHTML = '';
+
+    for (const role in distribution) {
+        const revenue = totalGmv * distribution[role];
+        const row = document.createElement('tr');
+        const cellRole = document.createElement('td');
+        cellRole.textContent = role;
+        const cellRev = document.createElement('td');
+        cellRev.textContent = Math.round(revenue).toLocaleString();
+        row.appendChild(cellRole);
+        row.appendChild(cellRev);
+        tbody.appendChild(row);
+    }
+
+    document.getElementById('resultTable').style.display = '';
+
+    // fill summary values
+    document.getElementById('totalGmv').textContent = Math.round(totalGmv).toLocaleString();
+    document.getElementById('totalRevenue').textContent = Math.round(totalRevenue).toLocaleString();
+    document.getElementById('surplus').textContent = Math.round(surplus).toLocaleString();
+    document.getElementById('summary').style.display = '';
+}
+</script>
+</body>
+</html>
