@@ -157,7 +157,9 @@ function simulate() {
         const cellRev = document.createElement('td');
         cellRev.textContent = Math.round(revenue).toLocaleString();
         const cellRev30 = document.createElement('td');
-        cellRev30.textContent = Math.round(revenue * 30).toLocaleString();
+        // 30일 수익: 1일 신규 가입 유저수 × 30 × 구매전환률 × 평균 주문액 × 저작료율
+        const monthlyRevenue = numMalls * 30 * conversionRate * orderValue * distribution[role];
+        cellRev30.textContent = Math.round(monthlyRevenue).toLocaleString();
         row.appendChild(cellRole);
         row.appendChild(cellRate);
         row.appendChild(cellRev);
@@ -169,9 +171,11 @@ function simulate() {
 
     // fill summary values
     document.getElementById('totalGmv').textContent = Math.round(totalGmv).toLocaleString();
-    document.getElementById('totalGmv30').textContent = Math.round(totalGmv * 30).toLocaleString();
+    const totalGmv30 = numMalls * 30 * conversionRate * orderValue;
+    const totalRevenue30 = totalGmv30 * 0.20;
+    document.getElementById('totalGmv30').textContent = Math.round(totalGmv30).toLocaleString();
     document.getElementById('totalRevenue').textContent = Math.round(totalRevenue).toLocaleString();
-    document.getElementById('totalRevenue30').textContent = Math.round(totalRevenue * 30).toLocaleString();
+    document.getElementById('totalRevenue30').textContent = Math.round(totalRevenue30).toLocaleString();
     document.getElementById('summary').style.display = '';
 }
 </script>
