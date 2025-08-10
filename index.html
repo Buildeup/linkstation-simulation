@@ -1,186 +1,282 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=520, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>링크스테이션 수익 시뮬레이션 v2.2</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; background: #fafbff; }
-        #container { width: 100%; max-width: 520px; margin-left: auto; margin-right: 0; background: #fff; padding: 16px 12px 32px 12px; box-sizing: border-box; min-height: 100vh; }
-        h1 { font-size: 1.3em; margin: 16px 0 18px 0; text-align: center; }
-        label { display: block; margin: 10px 0 5px; font-size: 1em; }
-        input { padding: 7px 8px; width: 100%; font-size: 1em; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { margin-top: 15px; padding: 10px 0; width: 100%; font-size: 1.06em; border-radius: 4px; border: none; background: #3a5be0; color: #fff; font-weight: 600; cursor: pointer; }
-        button:active { background: #2746b5; }
-        table { border-collapse: collapse; margin-top: 20px; width: 100%; max-width: 520px; font-size: 0.97em; }
-        th, td { border: 1px solid #ddd; padding: 8px 4px; text-align: right; }
-        th { background-color: #f7f7f7; text-align: center; font-size: 1em; }
-        td:first-child, th:first-child { text-align: left; }
-        #interactive-sim { border:1px solid #e4e6ef; padding:14px 10px 14px 10px; margin-bottom:20px; max-width:520px; background:#f5f7fc; border-radius: 6px; }
-        #interactive-sim label { margin-top:0; }
-        #completeMsg { font-size: 0.98em; }
-        #main-flex { display: flex; flex-direction: row; min-height: 100vh; width: 100vw; }
-        .side { flex: 0 0 19.1vw; }
-        #container { width: 100%; max-width: 520px; margin: 0 auto; background: #fff; padding: 16px 12px 32px 12px; box-sizing: border-box; min-height: 100vh; }
-        @media (max-width: 600px) {
-            #main-flex { display: block !important; }
-            .side { display: none; }
-            #container { max-width: 100vw; width: 100vw; padding: 6vw 2vw 12vw 2vw; min-height: 100vh; }
-            table, th, td { font-size: 0.97em; }
-            h1 { font-size: 1.08em; }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=520, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>링크스테이션 수익 시뮬레이션 v2.4</title>
+  <style>
+    :root{
+      --brand:#3a5be0;
+      --brand-d:#2746b5;
+      --bg:#fafbff;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --line:#e4e6ef;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}
+    #main-flex{display:flex;flex-direction:row;min-height:100vh;width:100vw}
+    .side{flex:0 0 19.1vw}
+    #container{width:100%;max-width:520px;margin:0 auto;background:var(--card);padding:16px 12px 32px;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+    h2{font-size:1.18rem;margin:10px 0 18px;text-align:center}
+    .card{border:1px solid var(--line);background:#f5f7fc;border-radius:10px;padding:14px 12px;margin-bottom:16px}
+    .q{margin:0 0 8px;font-weight:600}
+    .select-container{margin-top:12px}
+    .select-wrapper{position:relative;margin-bottom:8px}
+    .select-wrapper select{width:100%;padding:12px 16px;border:2px solid var(--line);border-radius:10px;font-size:1rem;background:#fff;cursor:pointer;appearance:none;-webkit-appearance:none;-moz-appearance:none;transition:border-color 0.2s ease}
+    .select-wrapper select:focus{outline:none;border-color:var(--brand)}
+    .select-wrapper select:hover{border-color:var(--brand-d)}
+    .select-wrapper::after{content:'▼';position:absolute;right:16px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted);font-size:0.8rem}
+    .field{margin-top:6px}
+    .field input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:.98rem}
+    .actions{margin-top:8px}
+    button{width:100%;padding:12px 14px;border:none;border-radius:10px;background:var(--brand);color:#fff;font-weight:700;font-size:1rem;cursor:pointer}
+    button:active{background:var(--brand-d)}
+    table{border-collapse:collapse;margin-top:18px;width:100%;max-width:520px;font-size:.97rem;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+    th,td{border-bottom:1px solid #eee;padding:10px 8px;text-align:right}
+    th{background:#f7f7f9;text-align:center}
+    td:first-child,th:first-child{text-align:left}
+    .muted{color:var(--muted);font-size:.9rem}
+    #summary{margin-top:14px}
+    @media (max-width:600px){
+      #main-flex{display:block}
+      .side{display:none}
+      #container{max-width:100vw;width:100vw;padding:6vw 3vw 12vw}
+      h2{font-size:1.05rem}
+    }
+  </style>
 </head>
 <body>
 <div id="main-flex">
   <div class="side"></div>
   <div id="container">
-<h2>Link Station Simulation</h2>
-<!-- 대화형 시뮬레이션 영역 -->
-<div id="interactive-sim">
-  <div id="step1">
-    <label>자사몰에 하루 몇명의 유저가 가입 하세요?</label>
-    <input type="number" id="step1Input" min="1" value="50">
-    <button onclick="nextStep(1)">다음</button>
-  </div>
-  <div id="step2" style="display:none;">
-    <label>하위몰의 구매전환율은 몇 % 로 예측하세요?</label>
-    <input type="number" id="step2Input" min="0" max="100" step="0.1" value="25">
-    <button onclick="nextStep(2)">다음</button>
-  </div>
-  <div id="step3" style="display:none;">
-    <label>평균 주문액은 어느정도 일까요?</label>
-    <input type="number" id="step3Input" min="1" value="150000">
-    <button onclick="nextStep(3)">입력 완료</button>
-  </div>
-  <div id="completeMsg" style="display:none; color:green; margin-top:10px;">
-    입력이 완료되었습니다! 아래 시뮬레이션 입력값이 자동으로 채워졌습니다.
-  </div>
-</div>
-<br>
-<label for="numMalls">하위몰 수:</label>
-<input type="number" id="numMalls" value="50" min="1">
+    <h2>Link Station Simulation</h2>
 
-<label for="conversionRate">하위몰당 구매전환율 (%):</label>
-<input type="number" id="conversionRate" value="25" min="0" step="0.1">
+    <!-- Q&A FLOW -->
+    <div id="qa" class="card">
+      <!-- 1. 포지션 선택 -->
+      <div id="q1">
+        <p class="q">포지션을 선택해 주세요.</p>
+        <div class="select-container">
+          <div class="select-wrapper">
+            <select id="posSelect">
+              <option value="">포지션을 선택하세요</option>
+              <option value="회원 [셀코드 IP]" selected>회원 [셀코드 IP]</option>
+              <option value="셀럽 IP">셀럽 IP [전문 크리에이터]</option>
+              <option value="그룹 IP">그룹 IP [기업 전용: 엔터프라이즈]</option>
+            </select>
+          </div>
+        </div>
+        <div class="actions" style="margin-top:12px">
+          <button onclick="goStep(2)">다음</button>
+        </div>
+      </div>
 
-<label for="orderValue">평균 주문액 (KRW):</label>
-<input type="number" id="orderValue" value="150000" min="1">
+      <!-- 2. SNS 선택 -->
+      <div id="q2" style="display:none">
+        <p class="q">SNS 채널을 선택해 주세요.</p>
+        <div class="select-container">
+          <div class="select-wrapper">
+            <select id="snsSelect">
+              <option value="">SNS 채널을 선택하세요</option>
+              <option value="유튜브(쇼츠)">유튜브</option>
+              <option value="인스타그램(릴스)" selected>인스타그램</option>
+              <option value="스레드">스레드</option>
+              <option value="페이스북">페이스북</option>
+              <option value="블로그">블로그</option>
+            </select>
+          </div>
+        </div>
+        <div class="actions" style="display:flex;gap:8px;margin-top:12px">
+          <button style="background:#9aa4b2" onclick="goStep(1)">이전</button>
+          <button onclick="goStep(3)">다음</button>
+        </div>
+      </div>
 
-<button onclick="simulate()">시뮬레이션 실행</button>
+      <!-- 3. 노출수 선택 -->
+      <div id="q3" style="display:none">
+        <p class="q">컨텐츠 노출수를 선택해 주세요.</p>
+        <div class="select-container">
+          <div class="select-wrapper">
+            <select id="expoSelect">
+              <option value="">노출 빈도를 선택하세요</option>
+              <option value="1일 1회">1일 1회</option>
+              <option value="3일 1회">3일 1회</option>
+              <option value="1주일 1~2회" selected>1주일 1회 ~ 2회</option>
+              <option value="1개월 2~3회">1개월 2회 ~ 3회</option>
+            </select>
+          </div>
+        </div>
+        <div class="actions" style="display:flex;gap:8px;margin-top:12px">
+          <button style="background:#9aa4b2" onclick="goStep(2)">이전</button>
+          <button onclick="goStep(4)">다음</button>
+        </div>
+      </div>
 
-<table id="resultTable" style="display:none">
-    <thead>
+      <!-- 4. 1개월 가입자 수 -->
+      <div id="q4" style="display:none">
+        <p class="q">1개월 (30일) 가입자 수는?</p>
+        <div class="field"><input id="monthlyJoin" type="number" min="1" placeholder="숫자 입력 (예: 2000)" value="2000" /></div>
+        <div class="actions" style="display:flex;gap:8px;margin-top:12px">
+          <button style="background:#9aa4b2" onclick="goStep(3)">이전</button>
+          <button onclick="runSimulation()">시뮬레이션 실행</button>
+        </div>
+      </div>
+
+      <p id="note" class="muted" style="display:none;margin-top:8px">
+        참고: 현재 버전은 내부 테스트용으로, 전환율(25%)과 평균 주문액(150,000원)은 기본값을 사용합니다. 새 정산 방식이 확정되면 반영하겠습니다.
+      </p>
+    </div>
+
+    <!-- 결과 테이블 -->
+    <table id="resultTable" style="display:none">
+      <thead>
         <tr>
-            <th>포지션</th>
-            <th>저작료율 (%)</th>
-            <th>수익 (KRW)</th>
-            <th>30일 수익 (KRW)</th>
+          <th>포지션</th>
+          <th>저작료율 (%)</th>
+          <th>1개월 수익 (KRW)</th>
         </tr>
-    </thead>
-    <tbody></tbody>
-</table>
+      </thead>
+      <tbody></tbody>
+    </table>
 
-<!-- 요약 결과 -->
-<div id="summary" style="display:none; margin-top:14px;">
-    <p><strong>총 매출(GMV):</strong> <span id="totalGmv"></span> KRW / <strong>30일 매출(GMV):</strong> <span id="totalGmv30"></span> KRW</p>
-    <p><strong>총 수수료 수익(8.1%):</strong> <span id="totalRevenue"></span> KRW / <strong>30일 총 수수료 수익:</strong> <span id="totalRevenue30"></span> KRW</p>
+    <!-- 요약 -->
+    <div id="summary" style="display:none">
+      <p class="muted" id="picked" style="margin-top: 4px"></p>
+      <p class="muted" id="calculation" style="margin-top: 4px"></p>
+    </div>
+
+  </div>
+  <div class="side"></div>
 </div>
 
 <script>
-function nextStep(step) {
-    if (step === 1) {
-        const val = document.getElementById('step1Input').value;
-        if (!val || parseInt(val) <= 0) { alert('유저 수를 입력하세요.'); return; }
-        document.getElementById('numMalls').value = val;
-        document.getElementById('step1').style.display = 'none';
-        document.getElementById('step2').style.display = '';
-        document.getElementById('step2Input').focus();
-    } else if (step === 2) {
-        const val = document.getElementById('step2Input').value;
-        if (val === '' || parseFloat(val) < 0) { alert('구매전환율을 입력하세요.'); return; }
-        document.getElementById('conversionRate').value = val;
-        document.getElementById('step2').style.display = 'none';
-        document.getElementById('step3').style.display = '';
-        document.getElementById('step3Input').focus();
-    } else if (step === 3) {
-        const val = document.getElementById('step3Input').value;
-        if (!val || parseFloat(val) <= 0) { alert('평균 주문액을 입력하세요.'); return; }
-        document.getElementById('orderValue').value = val;
-        document.getElementById('step3').style.display = 'none';
-        document.getElementById('completeMsg').style.display = '';
-        simulate(); // 모든 답변 입력 후 즉시 시뮬레이션 실행
+  // ---- CONFIG (정산 비율/전환율/객단가는 여기서 손쉽게 교체 가능) ----
+  const DEFAULT_CONVERSION = 0.25; // 25%
+  const DEFAULT_AOV = 150000;      // KRW
+  // 저작료 배분 (임시: 기존 값을 유지)
+  const distribution = {
+    "그룹 IP": 0.024,
+    "셀럽 IP": 0.021,
+    "회원 [셀코드 IP]": 0.024,
+    "공급사 저작료": 0.012
+  };
+
+  function goStep(n){
+    // 간단한 유효성 체크
+    if(n===2){
+      if(!getSelectValue('posSelect')){ alert('포지션을 선택해 주세요.'); return; }
     }
-}
-
-function simulate() {
-    const numMalls = parseInt(document.getElementById('numMalls').value);
-    const conversionRateInput = parseFloat(document.getElementById('conversionRate').value);
-    const orderValue = parseFloat(document.getElementById('orderValue').value);
-
-    if (isNaN(numMalls) || isNaN(conversionRateInput) || isNaN(orderValue) || numMalls <= 0 || conversionRateInput < 0 || orderValue <= 0) {
-        alert('모든 값은 올바르게 입력되어야 합니다.');
-        return;
+    if(n===3){
+      if(!getSelectValue('snsSelect')){ alert('SNS 채널을 선택해 주세요.'); return; }
     }
+    if(n===4){
+      if(!getSelectValue('expoSelect')){ alert('컨텐츠 노출수를 선택해 주세요.'); return; }
+    }
+    showStep(n);
+  }
 
-    // convert percentage to decimal
-    const conversionRate = conversionRateInput / 100.0;
+  function showStep(n){
+    ['q1','q2','q3','q4'].forEach(id => document.getElementById(id).style.display='none');
+    document.getElementById('q'+n).style.display='block';
+  }
 
-    // self purchase assumption: each sub-mall represents one potential buyer
+  function getSelectValue(selectId){
+    const select = document.getElementById(selectId);
+    return select.value || null;
+  }
+
+  function runSimulation(){
+    const pos  = getSelectValue('posSelect');
+    const sns = getSelectValue('snsSelect');
+    const expo = getSelectValue('expoSelect');
+    const monthlyJoins = parseInt(document.getElementById('monthlyJoin').value);
+
+    if(!pos){ alert('포지션을 선택해 주세요.'); return; }
+    if(!sns){ alert('SNS 채널을 선택해 주세요.'); return; }
+    if(!expo){ alert('컨텐츠 노출수를 선택해 주세요.'); return; }
+    if(!monthlyJoins || monthlyJoins <= 0){ alert('1개월 가입자 수를 입력해 주세요.'); return; }
+
+    // --- 계산 (1개월 기준) ---
+    const numMalls = monthlyJoins;        // 1개월 총 가입자 수 = 잠재 구매 주체
+    const conversionRate = DEFAULT_CONVERSION;
+    const orderValue = DEFAULT_AOV;
+
     const transactionsPerMall = conversionRate;
     const gmvPerMall = transactionsPerMall * orderValue;
     const totalGmv = gmvPerMall * numMalls;
 
-    // total revenue (20% of GMV)
-    const totalRevenue = totalGmv * 0.20;
-
-    // revenue distribution percentages
-    // Internal costs (빌드업 연동 수수료, 배송비·운영비 지원) are hidden from display
-    const distribution = {
-        '그룹 IP': 0.024,
-        '셀러 IP': 0.021,
-        '링크 초대': 0.024,
-        '공급사 저작료': 0.012
-    };
-
+    const totalRevenue = totalGmv * 0.20; // 총 수수료 수익(임시)
 
     const tbody = document.querySelector('#resultTable tbody');
     tbody.innerHTML = '';
 
-    for (const role in distribution) {
-        const revenue = totalGmv * distribution[role];
-        const row = document.createElement('tr');
-        const cellRole = document.createElement('td');
-        cellRole.textContent = role;
-        const cellRate = document.createElement('td');
-        cellRate.textContent = (distribution[role] * 100).toFixed(2) + '%';
-        const cellRev = document.createElement('td');
-        cellRev.textContent = Math.round(revenue).toLocaleString();
-        const cellRev30 = document.createElement('td');
-        // 30일 수익: 1일 신규 가입 유저수 × 30 × 구매전환률 × 평균 주문액 × 저작료율
-        const monthlyRevenue = numMalls * 30 * conversionRate * orderValue * distribution[role];
-        cellRev30.textContent = Math.round(monthlyRevenue).toLocaleString();
-        row.appendChild(cellRole);
-        row.appendChild(cellRate);
-        row.appendChild(cellRev);
-        row.appendChild(cellRev30);
-        tbody.appendChild(row);
+    // 선택된 포지션에 따라 표시할 항목 결정
+    let displayItems = [];
+    
+    console.log("선택된 포지션:", pos);
+    console.log("포지션 타입:", typeof pos);
+    
+    if (pos === "그룹 IP") {
+      // 그룹 IP: 모든 포지션 노출
+      displayItems = Object.keys(distribution);
+    } else if (pos === "셀럽 IP") {
+      // 셀럽 IP: 그룹 IP를 제외한 모든 포지션 노출
+      displayItems = Object.keys(distribution).filter(role => role !== "그룹 IP");
+    } else if (pos === "회원 [셀코드 IP]") {
+      // 회원 [셀코드 IP]: 그룹 IP, 셀럽 IP를 제외한 회원 [셀코드 IP]와 공급사 저작료만 노출
+      displayItems = ["회원 [셀코드 IP]", "공급사 저작료"];
     }
+    
+    console.log("표시할 항목들:", displayItems);
+
+          // 공급사 저작료는 항상 포함
+      if (!displayItems.includes("공급사 저작료")) {
+        displayItems.push("공급사 저작료");
+      }
+
+      displayItems.forEach((role, index) => {
+        const rate = distribution[role];
+        const revenue = totalGmv * rate;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${role}</td>
+          <td>${(rate*100).toFixed(2)}%</td>
+          <td>${Math.round(revenue).toLocaleString()}</td>
+        `;
+        tbody.appendChild(row);
+        
+        // 공급사 저작료 다음에 구분선 추가
+        if (role === "공급사 저작료") {
+          const separatorRow = document.createElement('tr');
+          separatorRow.innerHTML = `
+            <td colspan="4" style="border-top: 2px solid #e0e0e0; height: 1px; padding: 0;"></td>
+          `;
+          tbody.appendChild(separatorRow);
+        }
+      });
 
     document.getElementById('resultTable').style.display = '';
+    document.getElementById('note').style.display = 'block';
 
-    // fill summary values
-    document.getElementById('totalGmv').textContent = Math.round(totalGmv).toLocaleString();
-    const totalGmv30 = numMalls * 30 * conversionRate * orderValue;
-    const totalRevenue30 = totalGmv30 * 0.20;
-    document.getElementById('totalGmv30').textContent = Math.round(totalGmv30).toLocaleString();
-    document.getElementById('totalRevenue').textContent = Math.round(totalRevenue).toLocaleString();
-    document.getElementById('totalRevenue30').textContent = Math.round(totalRevenue30).toLocaleString();
-    document.getElementById('summary').style.display = '';
-}
+    // 선택된 정보를 picked 요소에 설정
+    document.getElementById('picked').textContent = `포지션: ${pos} / ${sns} / ${expo} / 1개월 가입자: ${monthlyJoins}명`;
+    
+    // 계산 공식을 calculation 요소에 설정
+    document.getElementById('calculation').textContent = `총 매출(GMV): ${monthlyJoins}명 × ${(DEFAULT_CONVERSION*100)}% × ${orderValue.toLocaleString()}원 = ${totalGmv.toLocaleString()}원`;
+    
+    // summary div를 표시
+    document.getElementById('summary').style.display = 'block';
+    
+    console.log("picked 요소:", document.getElementById('picked'));
+    console.log("picked 텍스트:", document.getElementById('picked').textContent);
+    console.log("summary 표시 상태:", document.getElementById('summary').style.display);
+    // 결과 영역으로 스크롤
+    document.getElementById('resultTable').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  // 초기 표시
+  showStep(1);
 </script>
-</div>
-  <div class="side"></div>
-</div>
 </body>
 </html>
